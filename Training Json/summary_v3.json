@@ -1,0 +1,76 @@
+{
+  "version": "V3.1",
+  "task": "matbench_steels",
+  "input_type": "magpie_compositional_descriptors",
+  "recursion_steps": 16,
+  "epochs": 300,
+  "dropout": 0.2,
+  "total_train_min": 3.0,
+  "baselines": {
+    "TPOT-Mat (best)": 79.9468,
+    "AutoML-Mat": 82.3043,
+    "MODNet v0.1.12": 87.7627,
+    "RF-SCM/Magpie": 103.5125,
+    "CrabNet": 107.316,
+    "MLP-TRM V2 best": 184.5662,
+    "Dummy": 229.7445
+  },
+  "models": {
+    "MLP-Magpie-XS": {
+      "params": 31153,
+      "avg_mae": 160.431,
+      "std_mae": 22.9652,
+      "fold_maes": [
+        134.0517,
+        180.4966,
+        150.2834,
+        194.1572,
+        143.1663
+      ],
+      "fold_details": [
+        {
+          "val_mae": 142.38520304361978,
+          "test_mae": 134.05167255704364
+        },
+        {
+          "val_mae": 179.71295505099826,
+          "test_mae": 180.49663919115824
+        },
+        {
+          "val_mae": 120.88979085286458,
+          "test_mae": 150.2833510368101
+        },
+        {
+          "val_mae": 153.35529581705728,
+          "test_mae": 194.15724477460307
+        },
+        {
+          "val_mae": 147.72008260091147,
+          "test_mae": 143.16628708377962
+        }
+      ],
+      "convergence": [
+        1381.9889,
+        1322.812,
+        1246.5261,
+        1160.7098,
+        1070.107,
+        977.1038,
+        882.732,
+        787.6669,
+        692.2777,
+        596.8955,
+        501.9912,
+        410.2127,
+        325.1374,
+        246.6031,
+        183.0734,
+        160.431
+      ],
+      "beats_tpot": false,
+      "beats_modnet": false,
+      "beats_crabnet": false,
+      "beats_v2": true
+    }
+  }
+}
