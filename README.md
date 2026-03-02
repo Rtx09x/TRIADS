@@ -3,11 +3,14 @@
 ### A High-Precision Deep Learning Architecture for Alloy Yield Strength Prediction on Sparse Datasets
 
 [![Matbench](https://img.shields.io/badge/Matbench_Steels-91.20_MPa_MAE-2ea44f)](https://matbench.materialsproject.org/Leaderboards%20Per%20Task/matbench_steels/)
+[![HF Model](https://img.shields.io/badge/%F0%9F%A4%97_Model-Rtx09%2FTRIADS-blue)](https://huggingface.co/Rtx09/TRIADS)
+[![HF Spaces](https://img.shields.io/badge/%F0%9F%A4%97_Spaces-Live_Demo-orange)](https://huggingface.co/spaces/Rtx09/TRIADS)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 
----
+> 🔗 **[Try the Interactive Demo](https://huggingface.co/spaces/Rtx09/TRIADS)** · **[Download Pretrained Weights](https://huggingface.co/Rtx09/TRIADS)**
+
 
 ## Overview
 
