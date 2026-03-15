@@ -1,0 +1,80 @@
+{
+  "version": "EG-V3",
+  "seeds": [
+    42,
+    123,
+    456,
+    789,
+    1024
+  ],
+  "configs": {
+    "V3-82K": {
+      "d_attn": 32,
+      "nhead": 4,
+      "d_hidden": 64,
+      "ff_dim": 96,
+      "dropout": 0.15,
+      "max_steps": 16
+    },
+    "V3-100K": {
+      "d_attn": 40,
+      "nhead": 4,
+      "d_hidden": 72,
+      "ff_dim": 108,
+      "dropout": 0.15,
+      "max_steps": 16
+    }
+  },
+  "results": {
+    "V3-82K": {
+      "single_avg": 0.3416,
+      "single_std": 0.003,
+      "ensemble_avg": 0.3122,
+      "ensemble_std": 0.0108,
+      "ensemble_folds": [
+        0.3015,
+        0.3066,
+        0.3306,
+        0.3041,
+        0.3183
+      ],
+      "seed_avgs": {
+        "42": 0.3457,
+        "123": 0.3371,
+        "456": 0.3422,
+        "789": 0.3396,
+        "1024": 0.3433
+      }
+    },
+    "V3-100K": {
+      "single_avg": 0.3344,
+      "single_std": 0.0031,
+      "ensemble_avg": 0.3068,
+      "ensemble_std": 0.0082,
+      "ensemble_folds": [
+        0.3069,
+        0.3122,
+        0.319,
+        0.2998,
+        0.2962
+      ],
+      "seed_avgs": {
+        "42": 0.3373,
+        "123": 0.333,
+        "456": 0.333,
+        "789": 0.3299,
+        "1024": 0.3385
+      }
+    }
+  },
+  "total_time_min": 372.3,
+  "baselines": {
+    "Darwin": 0.2865,
+    "Ax/SAASBO CrabNet": 0.331,
+    "MODNet v0.1.12": 0.3327,
+    "AMMExpress v2020": 0.4161,
+    "CrabNet": 0.4427,
+    "RF-SCM/Magpie": 0.5205,
+    "Dummy": 1.028
+  }
+}

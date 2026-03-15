@@ -1,0 +1,160 @@
+{
+  "version": "V5",
+  "task": "matbench_steels",
+  "input_type": "magpie_132_plus_mat2vec_200_combined_332",
+  "innovations": {
+    "V5A": "SWA (epoch 200-300) + recursion step ensemble (avg steps 13-16)",
+    "V5B": "Feature-Group Dual-Reference TRM: 22 Magpie property tokens, E0 (fixed) + Et (evolved) cross-attention, z seeded from Mat2Vec"
+  },
+  "recursion_steps": 16,
+  "epochs": 300,
+  "swa_start": 200,
+  "ensemble_last_k": 4,
+  "dropout": 0.2,
+  "total_train_min": 21.9,
+  "baselines": {
+    "TPOT-Mat (best)": 79.9468,
+    "AutoML-Mat": 82.3043,
+    "MODNet v0.1.12": 87.7627,
+    "RF-SCM/Magpie": 103.5125,
+    "CrabNet": 107.316,
+    "MLP-Magpie-L V3": 130.3264,
+    "MLP-Combined-S V4": 131.6265,
+    "MLP-TRM V2 best": 184.5662,
+    "Dummy": 229.7445
+  },
+  "models": {
+    "V5A-MLP-SWA": {
+      "params": 66889,
+      "avg_mae": 128.9836,
+      "std_mae": 17.4191,
+      "avg_mae_ensemble": 194.8356,
+      "std_mae_ensemble": 15.3426,
+      "fold_maes": [
+        118.4102,
+        150.8544,
+        106.2751,
+        147.8462,
+        121.5323
+      ],
+      "fold_maes_ensemble": [
+        201.8468,
+        204.9897,
+        188.3982,
+        210.986,
+        167.9574
+      ],
+      "fold_details": [
+        {
+          "val_mae": 184.92130194769965,
+          "test_mae": 118.41017816937159,
+          "test_mae_ensemble": 201.8468320331876
+        },
+        {
+          "val_mae": 188.67582533094617,
+          "test_mae": 150.85443478538878,
+          "test_mae_ensemble": 204.98966447133867
+        },
+        {
+          "val_mae": 162.8638678656684,
+          "test_mae": 106.27511768956339,
+          "test_mae_ensemble": 188.39815939626385
+        },
+        {
+          "val_mae": 184.1307610405816,
+          "test_mae": 147.84615079818232,
+          "test_mae_ensemble": 210.98601605815273
+        },
+        {
+          "val_mae": 191.57372029622397,
+          "test_mae": 121.53225904895413,
+          "test_mae_ensemble": 167.95743733067667
+        }
+      ],
+      "convergence": [
+        1396.2544,
+        1340.7345,
+        1260.7372,
+        1170.0608,
+        1075.8997,
+        980.2375,
+        883.7045,
+        786.5816,
+        689.0525,
+        591.8969,
+        496.615,
+        404.1629,
+        315.2617,
+        232.5248,
+        161.8265,
+        128.9836
+      ]
+    },
+    "V5B-FeatGroup-Novel": {
+      "params": 38593,
+      "avg_mae": 165.1077,
+      "std_mae": 17.5566,
+      "avg_mae_ensemble": 227.9492,
+      "std_mae_ensemble": 26.9425,
+      "fold_maes": [
+        175.4957,
+        157.9477,
+        147.1682,
+        194.2803,
+        150.6466
+      ],
+      "fold_maes_ensemble": [
+        259.9132,
+        219.4111,
+        209.9333,
+        258.3778,
+        192.1103
+      ],
+      "fold_details": [
+        {
+          "val_mae": 276.51026746961804,
+          "test_mae": 175.49571688213047,
+          "test_mae_ensemble": 259.9132448226687
+        },
+        {
+          "val_mae": 243.519046359592,
+          "test_mae": 157.94774978879897,
+          "test_mae_ensemble": 219.41113547673302
+        },
+        {
+          "val_mae": 227.79917738172742,
+          "test_mae": 147.16824586929815,
+          "test_mae_ensemble": 209.93333336614793
+        },
+        {
+          "val_mae": 245.96407063802084,
+          "test_mae": 194.28025645594442,
+          "test_mae_ensemble": 258.3778017105595
+        },
+        {
+          "val_mae": 276.3516269259983,
+          "test_mae": 150.64655303955078,
+          "test_mae_ensemble": 192.11033728814894
+        }
+      ],
+      "convergence": [
+        1368.2841,
+        1294.8349,
+        1213.3252,
+        1128.6831,
+        1042.576,
+        955.4276,
+        867.5868,
+        779.3034,
+        690.7301,
+        601.9524,
+        513.0331,
+        426.2293,
+        342.6824,
+        263.6608,
+        198.0363,
+        165.1077
+      ]
+    }
+  }
+}

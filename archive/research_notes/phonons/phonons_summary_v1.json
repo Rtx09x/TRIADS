@@ -1,0 +1,40 @@
+{
+  "version": "phonons-V1",
+  "dataset": "matbench_phonons",
+  "samples": 1265,
+  "target_unit": "1/cm",
+  "model_config": {
+    "d_attn": 32,
+    "nhead": 4,
+    "d_hidden": 64,
+    "ff_dim": 96,
+    "dropout": 0.2,
+    "max_steps": 16
+  },
+  "params": 75905,
+  "seeds": [
+    42
+  ],
+  "fold_seed": 18012019,
+  "per_seed": {
+    "42": {
+      "0": 95.8025,
+      "1": 63.1249,
+      "2": 75.4718,
+      "3": 62.1688,
+      "4": 62.5163
+    }
+  },
+  "single_seed_avg": 71.8169,
+  "single_seed_std": 0.0,
+  "ensemble_maes": {
+    "0": 95.8025,
+    "1": 63.1249,
+    "2": 75.4718,
+    "3": 62.1688,
+    "4": 62.5163
+  },
+  "ensemble_avg": 71.8169,
+  "ensemble_std": 12.9908,
+  "total_time_min": 11.2
+}

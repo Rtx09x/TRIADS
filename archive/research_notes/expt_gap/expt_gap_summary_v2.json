@@ -1,0 +1,25 @@
+{
+  "version": "EG-V2",
+  "batch_size": 64,
+  "total_min": 36.1,
+  "total_features": 354,
+  "n_extra": 22,
+  "model": {
+    "name": "V2-82K",
+    "params": 75457,
+    "avg_mae": 0.3342,
+    "std_mae": 0.0131,
+    "folds": [
+      0.3182,
+      0.3402,
+      0.3418,
+      0.3514,
+      0.3195
+    ]
+  },
+  "v1_comparison": {
+    "v1_82k": 0.3616,
+    "v2_82k": 0.3342,
+    "delta": -0.0274
+  }
+}

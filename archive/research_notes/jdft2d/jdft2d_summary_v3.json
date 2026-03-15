@@ -1,0 +1,32 @@
+{
+  "version": "jdft2d-V3",
+  "dataset": "matbench_jdft2d",
+  "samples": 636,
+  "target_unit": "meV/atom",
+  "model_config": {
+    "d_attn": 32,
+    "nhead": 4,
+    "d_hidden": 64,
+    "ff_dim": 96,
+    "dropout": 0.2,
+    "max_steps": 16
+  },
+  "params": 75905,
+  "seed": 42,
+  "features": {
+    "magpie": 132,
+    "comp_extras": "Stoichiometry + ValenceOrbital + IonProperty + TMetalFraction",
+    "structural": "lattice(6) + vol/atom + density + nsites + spacegroup + packing",
+    "mat2vec": 200
+  },
+  "fold_maes": {
+    "0": 25.7549,
+    "1": 35.58,
+    "2": 54.6298,
+    "3": 25.4245,
+    "4": 43.6271
+  },
+  "avg_mae": 37.0033,
+  "std_mae": 11.1102,
+  "total_time_min": 6.8
+}

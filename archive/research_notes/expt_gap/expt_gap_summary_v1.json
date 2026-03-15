@@ -1,0 +1,82 @@
+{
+  "version": "EG-V1",
+  "task": "matbench_expt_gap",
+  "dataset_size": 4604,
+  "target": "gap expt (eV)",
+  "strategy": "TRIADS V13A architecture, standard deep supervision",
+  "seeds": [
+    42
+  ],
+  "n_seeds": 1,
+  "n_extra_features": 136,
+  "total_min": 89.7,
+  "kfold": {
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 18012019,
+    "note": "Official Matbench split protocol"
+  },
+  "models": {
+    "EG-A-SameSize": {
+      "avg_mae": 0.351,
+      "std_mae": 0.0285,
+      "folds": [
+        0.3417,
+        0.348,
+        0.4058,
+        0.3249,
+        0.3345
+      ],
+      "params": 218541,
+      "final_train_mae": [
+        0.1152,
+        0.0907,
+        0.1231,
+        0.1492,
+        0.1866
+      ],
+      "final_val_mae": [
+        0.4092,
+        0.3769,
+        0.3222,
+        0.3958,
+        0.3724
+      ]
+    },
+    "EG-B-Smaller": {
+      "avg_mae": 0.3616,
+      "std_mae": 0.0103,
+      "folds": [
+        0.3444,
+        0.3632,
+        0.3575,
+        0.3684,
+        0.3743
+      ],
+      "params": 82753,
+      "final_train_mae": [
+        0.1252,
+        0.1805,
+        0.2346,
+        0.1463,
+        0.2339
+      ],
+      "final_val_mae": [
+        0.4227,
+        0.4228,
+        0.3667,
+        0.3865,
+        0.5028
+      ]
+    }
+  },
+  "baselines": {
+    "Darwin": 0.2865,
+    "Ax/SAASBO CrabNet": 0.331,
+    "MODNet v0.1.12": 0.3327,
+    "AMMExpress v2020": 0.4161,
+    "CrabNet": 0.4427,
+    "RF-SCM/Magpie": 0.5205,
+    "Dummy": 1.028
+  }
+}

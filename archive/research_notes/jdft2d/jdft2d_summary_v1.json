@@ -1,0 +1,26 @@
+{
+  "version": "jdft2d-V1",
+  "dataset": "matbench_jdft2d",
+  "samples": 636,
+  "target_unit": "meV/atom",
+  "model_config": {
+    "d_attn": 40,
+    "nhead": 4,
+    "d_hidden": 72,
+    "ff_dim": 108,
+    "dropout": 0.15,
+    "max_steps": 16
+  },
+  "params": 101433,
+  "seed": 42,
+  "fold_maes": {
+    "0": 31.3852,
+    "1": 45.5806,
+    "2": 69.3778,
+    "3": 34.0976,
+    "4": 48.5812
+  },
+  "avg_mae": 45.8045,
+  "std_mae": 13.4791,
+  "total_time_min": 5.6
+}

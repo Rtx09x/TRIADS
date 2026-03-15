@@ -1,0 +1,41 @@
+{
+  "dataset": "matbench_glass",
+  "task": "classification",
+  "metric": "ROCAUC",
+  "samples": 5680,
+  "class_balance": "4035 positive / 1645 negative",
+  "model_config": {
+    "d_attn": 40,
+    "nhead": 4,
+    "d_hidden": 72,
+    "ff_dim": 108,
+    "dropout": 0.15,
+    "max_steps": 16
+  },
+  "params": 101145,
+  "seeds": [
+    42
+  ],
+  "fold_seed": 18012019,
+  "per_seed": {
+    "42": {
+      "0": 0.9126,
+      "1": 0.9271,
+      "2": 0.9216,
+      "3": 0.9406,
+      "4": 0.9276
+    }
+  },
+  "single_seed_avg": 0.9259,
+  "single_seed_std": 0.0,
+  "ensemble_aucs": {
+    "0": 0.9126,
+    "1": 0.9271,
+    "2": 0.9216,
+    "3": 0.9406,
+    "4": 0.9276
+  },
+  "ensemble_avg": 0.9259,
+  "ensemble_std": 0.0091,
+  "total_time_min": 47.4
+}

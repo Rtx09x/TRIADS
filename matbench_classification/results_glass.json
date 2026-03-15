@@ -1,0 +1,39 @@
+{
+  "dataset": "matbench_glass",
+  "task": "classification",
+  "metric": "ROCAUC",
+  "samples": 5680,
+  "class_balance": "4035 positive / 1645 negative",
+  "note": "Best result: 44K model (d_attn=24, d_hidden=48), 5-seed ensemble. 100K model gives 0.9259 (single-seed).",
+  "best_model": "HybridTRIADS 44K, 5-seed ensemble",
+  "model_config": {
+    "d_attn": 24,
+    "nhead": 4,
+    "d_hidden": 48,
+    "ff_dim": 72,
+    "dropout": 0.15,
+    "max_steps": 16
+  },
+  "params": 43833,
+  "seeds": [42, 123, 456, 789, 1024],
+  "fold_seed": 18012019,
+  "ensemble_aucs": {
+    "0": 0.9244,
+    "1": 0.9222,
+    "2": 0.9245,
+    "3": 0.9392,
+    "4": 0.9322
+  },
+  "ensemble_avg": 0.9285,
+  "ensemble_std": 0.0063,
+  "single_seed_avg": 0.9259,
+  "single_seed_std": 0.0091,
+  "single_seed_folds_s42": {
+    "0": 0.9126,
+    "1": 0.9271,
+    "2": 0.9216,
+    "3": 0.9406,
+    "4": 0.9276
+  },
+  "total_time_min": 47.4
+}

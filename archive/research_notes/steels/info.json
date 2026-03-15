@@ -1,0 +1,8 @@
+{
+    "authors": "Rudra Tiwari",
+    "algorithm": "RudraNet",
+    "algorithm_long": "RudraNet is a novel hybrid recursive architecture (Hybrid-Attention-MLP-Recursive-Model) designed specifically for low-data materials property prediction. It features an Attention-based Feature Extractor (AFE) that utilizes multi-head self-attention on tokenized elemental and stoichiometric descriptors, followed by a cross-attention gating mechanism with Mat2Vec embeddings. The core reasoning engine is a recursive MLP-TRM loop with shared weights that performs iterative state refinement over 20 discrete steps. The model is trained using a linear-weighted Deep Supervision loss and Stochastic Weight Averaging (SWA) to ensure generalizability on small tabular datasets.",
+    "bibtex": "",
+    "notes": "Single seed models easily surpass 96.0 MPa. The ensemble destroys initialization variance. Defeated Random Forest Magpie, CrabNet, and DARWIN.",
+    "requirements": "pytorch 2.x, matminer, sklearn, gensim"
+}

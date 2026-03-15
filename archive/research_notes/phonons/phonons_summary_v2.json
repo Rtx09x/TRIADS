@@ -1,0 +1,22 @@
+{
+  "version": "phonons-V2-GNN+TRM",
+  "dataset": "matbench_phonons",
+  "params_gnn": 37280,
+  "params_total": 115233,
+  "seeds": [
+    42
+  ],
+  "fold_seed": 18012019,
+  "per_seed": {
+    "42": {
+      "0": 82.6187,
+      "1": 49.4855,
+      "2": 71.3595,
+      "3": 61.34,
+      "4": 65.2945
+    }
+  },
+  "ensemble_avg": 66.0196,
+  "ensemble_std": 10.953,
+  "total_time_min": 12.9
+}

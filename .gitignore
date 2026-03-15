@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Model weights (hosted on HuggingFace)
+*.pt
+*.pth
+*.ckpt
+weights/**/*.pt
+weights/**/*.pth
+
+# Datasets (downloaded at runtime)
+*.pt
+phonons_v6_dataset.pt
+mat2vec_cache/
+
+# Training artifacts
+trm_models_v13/
+expt_gap_models_v3/
+is_metal_models/
+glass_models/
+jdft2d_models_v4/
+*.zip
+
+# Logs and temp
+*.log
+.DS_Store
+Thumbs.db

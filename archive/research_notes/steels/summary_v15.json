@@ -1,0 +1,21 @@
+{
+  "version": "V15",
+  "task": "matbench_steels",
+  "architecture": "HTRM (Hierarchical Tiny Reasoning Model)",
+  "strategy": "H-module(Attention) + L-module(MLP-TRM), HRM-inspired",
+  "seed": 42,
+  "n_h_cycles": 4,
+  "n_l_steps": 5,
+  "total_steps": 20,
+  "total_min": 14.3,
+  "avg": 431.8688,
+  "std": 49.5893,
+  "folds": [
+    367.703,
+    412.3265,
+    422.0011,
+    519.4045,
+    437.9088
+  ],
+  "params": 202253
+}
