@@ -3,12 +3,11 @@
 ### A High-Precision Deep Learning Architecture for Materials Property Prediction on Sparse Datasets
 
 [![HF Model](https://img.shields.io/badge/🤗_Model-Rtx09%2FTRIADS-yellow)](https://huggingface.co/Rtx09/TRIADS)
-[![HF Demo](https://img.shields.io/badge/🤗_Demo-Live_App-orange)](https://huggingface.co/spaces/Rtx09/TRIADS)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 
-> 🔗 **[Try the Interactive Demo](https://huggingface.co/spaces/Rtx09/TRIADS)** · **[Download Pretrained Weights](https://huggingface.co/Rtx09/TRIADS)** · **[Read the Paper](TRIADS_Final.pdf)**
+> 🔗 **[Download Pretrained Weights](https://huggingface.co/Rtx09/TRIADS)** · **[Read the Paper](TRIADS_Final.pdf)**
 
 ---
 
