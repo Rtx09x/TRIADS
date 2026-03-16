@@ -7,7 +7,7 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 
-> 🔗 **[Download Pretrained Weights](https://huggingface.co/Rtx09/TRIADS)** · **[Read the Paper](TRIADS_Final.pdf)**
+> 🔗 **[Download Pretrained Weights](https://huggingface.co/Rtx09/TRIADS)** · **[Read the Paper](triads_paper.pdf)**
 
 ---
 
