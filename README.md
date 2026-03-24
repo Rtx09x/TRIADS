@@ -345,11 +345,12 @@ Raw training metrics for every version of every benchmark are in [`archive/resea
 
 ```bibtex
 @article{tiwari2026triads,
-  author    = {Rudra Tiwari},
-  title     = {TRIADS: Tiny Recursive Information-Attention with Deep Supervision},
-  year      = {2026},
-  url       = {https://github.com/Rtx09x/TRIADS},
-  note      = {huggingface.co/Rtx09/TRIADS}
+  author  = {Rudra Tiwari},
+  title   = {TRIADS: Tiny Recursive Information-Attention with Deep Supervision},
+  year    = {2026},
+  doi     = {10.5281/zenodo.19200579},
+  url     = {https://doi.org/10.5281/zenodo.19200579},
+  note    = {Code: https://github.com/Rtx09x/TRIADS; Models: https://huggingface.co/Rtx09/TRIADS}
 }
 ```
 
