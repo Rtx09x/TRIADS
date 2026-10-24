@@ -1,0 +1,21 @@
+{
+  "checked_utc": "2026-10-24T11:17:03.364153+00:00",
+  "matminer_version": "0.9.3",
+  "n_samples": 312,
+  "normal_descriptor_dimensions": {},
+  "exceptions": {
+    "ValueError: Charge balance analysis requires integer values in Composition!": 312
+  },
+  "error_examples": {
+    "ValueError: Charge balance analysis requires integer values in Composition!": {
+      "row": 1,
+      "composition": "Fe0.620C0.000953Mn0.000521Si0.00102Cr0.000110Ni0.192Mo0.0176V0.000112Nb0.0000616Co0.146Al0.00318Ti0.0185"
+    }
+  },
+  "initial_code_n_extra": 200,
+  "simulated_input_widths": {
+    "200": 312
+  },
+  "uniform_width": true,
+  "status": "inspected"
+}
