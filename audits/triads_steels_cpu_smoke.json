@@ -1,0 +1,20 @@
+{
+  "checked_utc": "2026-10-24T11:02:39.905458+00:00",
+  "python": "3.11.17 (main, Oct  1 2026, 14:32:31) [GCC 13.3.0]",
+  "versions": {
+    "torch": "2.3.1+cpu",
+    "numpy": "1.26.4",
+    "sklearn": "1.5.1",
+    "pymatgen": "unknown",
+    "matminer": "0.9.3",
+    "gensim": "4.3.3",
+    "pandas": "2.2.2",
+    "matplotlib": "3.9.4"
+  },
+  "parameters_for_synthetic_n_extra_128": 217773,
+  "output_shape": [
+    2
+  ],
+  "output_all_finite": true,
+  "status": "passed"
+}
