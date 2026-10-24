@@ -1,0 +1,95 @@
+name: TRIADS steels compatibility and checkpoints
+on:
+  push:
+    branches: [audit/mat2vec-sha256-20261024]
+    paths: [.github/workflows/triads-steels-compatibility.yml]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Resolve TRIADS steels dependencies, inspect HF checkpoint, exercise imports
+        shell: bash
+        run: |
+          mkdir -p audits
+          python - <<'PY'
+          import json, os, pathlib, subprocess, sys, traceback, urllib.request
+          out = {'source': 'Rtx09x/TRIADS main requirements.txt', 'python': sys.version, 'checks': {}}
+          report = pathlib.Path('audits/triads_steels_compatibility.json')
+          def save():
+              report.write_text(json.dumps(out, indent=2, sort_keys=True, default=str)+'\n')
+          def command(key, args, timeout=600):
+              try:
+                  p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+                  out['checks'][key] = {'exit_code':p.returncode, 'stdout_tail':p.stdout[-5000:], 'stderr_tail':p.stderr[-5000:]}
+                  save()
+                  return p.returncode == 0
+              except Exception as e:
+                  out['checks'][key] = {'error':str(e)}
+                  save()
+                  return False
+          try:
+              with urllib.request.urlopen('https://raw.githubusercontent.com/Rtx09x/TRIADS/main/requirements.txt', timeout=30) as res:
+                  req = res.read().decode('utf-8')
+              out['triads_requirements'] = req
+              # steels model does not use torch-geometric, so exclude only this unrelated
+              # graph-task dependency. The official Matbench exporter is independent.
+              lines = [line.strip() for line in req.splitlines() if line.strip() and not line.startswith('#') and not line.startswith('torch-geometric')]
+              chosen = {'torch':'2.3.1', 'pymatgen':'2024.7.18', 'matminer':'0.9.3', 'gensim':'4.3.3',
+                        'scikit-learn':'1.5.1', 'numpy':'1.26.4', 'pandas':'2.2.2',
+                        'matplotlib':'3.9.1', 'tqdm':'4.66.4', 'huggingface_hub':'0.24.7'}
+              pins = [f'{key}=={value}' for key,value in chosen.items()]
+              out['proposed_pins'] = pins
+              save()
+              pathlib.Path('/tmp/triads-steels.txt').write_text('\n'.join(pins)+'\n')
+              command('pip_resolution', [sys.executable,'-m','pip','install','--dry-run','-r','/tmp/triads-steels.txt'], 300)
+              # Inspect official Hugging Face model file listing WITHOUT loading any weights
+              for repo in ('Rtx09x/TRIADS','Rtx09/TRIADS'):
+                  try:
+                      with urllib.request.urlopen('https://huggingface.co/api/models/'+repo, timeout=50) as res:
+                          model = json.load(res)
+                      relevant = [a for a in model.get('siblings',[]) if 'steels' in a.get('rfilename','').lower()]
+                      out['checks']['hub_listing']={'repo':repo,'files':relevant[:80]}
+                      break
+                  except Exception as exc:
+                      out.setdefault('hub_errors', []).append(repo+': '+str(exc))
+              save()
+              # CPU torch first, so no CUDA packages exhaust the hosted runner disk
+              t = chosen['torch']
+              torch_ok = command('torch_cpu_install',[sys.executable,'-m','pip','install','--index-url','https://download.pytorch.org/whl/cpu',f'torch=={t}'],550)
+              if torch_ok:
+                  dependencies = [p for p in pins if not p.startswith('torch==')]
+                  pathlib.Path('/tmp/triads-rest.txt').write_text('\n'.join(dependencies)+'\n')
+                  installed = command('inference_dependencies_install',[sys.executable,'-m','pip','install','-r','/tmp/triads-rest.txt'],550)
+                  if installed:
+                      smoke = """import json, torch, numpy, scipy, sklearn, pymatgen, matminer, gensim, matplotlib, pandas
+import importlib.util
+spec=importlib.util.spec_from_file_location('triads_steels','matbench_steels/model.py')
+mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+m=mod.DeepHybridTRM(n_extra=50)
+print(json.dumps({'torch':torch.__version__,'numpy':numpy.__version__,'sklearn':sklearn.__version__,'pymatgen':pymatgen.__version__,'matminer':matminer.__version__,'gensim':gensim.__version__,'parameter_count':m.count_parameters()}))
+"""
+                      command('model_import_construct',[sys.executable,'-c',smoke],200)
+              save()
+          except Exception as exc:
+              out['fatal_error'] = traceback.format_exc()[-6000:]
+              save()
+          print(json.dumps(out,indent=2,default=str))
+          PY
+      - name: Publish audit report to isolated branch
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/triads_steels_compatibility.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Record TRIADS source-based steels compatibility [skip ci]"
+            git push origin HEAD:audit/mat2vec-sha256-20261024
+          fi
