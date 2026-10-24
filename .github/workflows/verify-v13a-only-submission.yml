@@ -1,0 +1,44 @@
+name: Verify submitted V13A-only source
+on:
+  push:
+    branches: [audit/mat2vec-sha256-20261024]
+    paths: [.github/workflows/verify-v13a-only-submission.yml]
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and inspect submission
+        run: |
+          mkdir -p audits
+          python3 - <<'PY'
+          import ast,urllib.request,json,pathlib,traceback
+          out={}
+          try:
+              url='https://raw.githubusercontent.com/Rtx09x/matbench/791ea7bd6f4551743bb4da5876d820c638a6f84b/benchmarks/matbench_v0.1_RudraNet/trm13.py'
+              with urllib.request.urlopen(url,timeout=30) as u:
+                  code=u.read().decode('utf8')
+              compile(code,'trm13.py','exec')
+              parsed=ast.parse(code)
+              defs=[x.name for x in parsed.body if isinstance(x,(ast.ClassDef,ast.FunctionDef))]
+              assert 'DeepHybridTRM' in defs and 'train_fold_standard' in defs
+              assert 'DeepConfidenceHybridTRM' not in defs
+              assert 'V13B' not in code and 'BASELINES' not in code
+              assert "V13A-2xSA-StdDS" in code
+              out={'status':'passed','compiled':True,'main_defs':defs,'v13b_present':False,'lines':len(code.splitlines())}
+          except Exception as e:out={'status':'error','error':repr(e),'traceback':traceback.format_exc()[-1000:]}
+          pathlib.Path('audits/v13a_only_source_check.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          if out['status']!='passed':raise SystemExit(1)
+          PY
+      - name: Persist verification
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audits/v13a_only_source_check.json
+          git commit -m 'Record source-only V13A verification [skip ci]'
+          git pull --rebase origin audit/mat2vec-sha256-20261024
+          git push origin HEAD:audit/mat2vec-sha256-20261024
