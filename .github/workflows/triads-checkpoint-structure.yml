@@ -1,0 +1,79 @@
+name: TRIADS safe checkpoint structure audit
+on:
+  push:
+    branches: [audit/mat2vec-sha256-20261024]
+    paths: [.github/workflows/triads-checkpoint-structure.yml]
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install CPU-only Torch
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir torch==2.3.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Inspect existing Hugging Face weights with safe deserialization
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, urllib.request, pathlib, hashlib, traceback, datetime, tempfile
+          report={"repo":"Rtx09x/TRIADS","file":"weights/steels/weights.pt","checked_utc":datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          report_path=pathlib.Path("audits/triads_safe_checkpoint.json")
+          try:
+              import torch
+              report["torch_version"]=torch.__version__
+              src="https://huggingface.co/Rtx09x/TRIADS/resolve/main/weights/steels/weights.pt"
+              with tempfile.NamedTemporaryFile(suffix=".pt") as f:
+                  with urllib.request.urlopen(src,timeout=120) as response:
+                      while True:
+                          b=response.read(1024*1024)
+                          if not b:break
+                          f.write(b)
+                  f.flush()
+                  obj=torch.load(f.name,map_location="cpu",weights_only=True)
+              report["safe_weights_only"]=True
+              report["root_type"]=str(type(obj))
+              if isinstance(obj,dict):
+                  report["root_keys"]=list(obj.keys())
+                  report["model_config"]=repr(obj.get("config"))
+                  report["n_extra"]=repr(obj.get("n_extra"))
+                  folds=obj.get("folds",[])
+                  report["fold_count"]=len(folds)
+                  report["folds"]=[]
+                  for index,fold in enumerate(folds):
+                      record={"fold_index":index,"type":str(type(fold))}
+                      if isinstance(fold,dict):
+                          record["keys"]=list(fold.keys())
+                          for name in ("fold","seed","test_mae","val_mae","config"):
+                              if name in fold: record[name]=str(fold[name])
+                          states=fold.get("model_state",{})
+                          record["model_state_tensors"]=len(states)
+                          record["state_keys_sample"]=list(states)[:7]
+                          record["total_parameters"]=sum(t.numel() for t in states.values() if isinstance(t,torch.Tensor))
+                      report["folds"].append(record)
+              report["status"]="safe_checkpoint_inspected"
+          except Exception as exc:
+              report["status"]="inspection_error"
+              report["error"]=type(exc).__name__+": "+str(exc)
+              report["traceback"]=traceback.format_exc()[-1800:]
+          report_path.write_text(json.dumps(report,indent=2,default=str)+"\n")
+          print(json.dumps(report,indent=2,default=str),flush=True)
+          PY
+      - name: Save report on audit branch
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/triads_safe_checkpoint.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Record TRIADS checkpoint metadata [skip ci]"
+            git pull --rebase origin audit/mat2vec-sha256-20261024
+            git push origin HEAD:audit/mat2vec-sha256-20261024
+          fi
