@@ -1,0 +1,90 @@
+{
+  "checked_utc": "2026-10-24T12:26:32.333762+00:00",
+  "scope": "Best-effort historical saved-weight inference versus submitted raw predictions",
+  "model_repository": "Rtx09x/TRIADS",
+  "checkpoint": "weights/steels/weights.pt",
+  "independent_per_seed_weights_available": false,
+  "historical_scalers_embedded_in_checkpoint": false,
+  "status": "completed_proxy_comparison",
+  "checkpoint_download": {
+    "sha256": "64ee164db899d44365bea3a67ef258d7e122144d4088357dd56af10a1c0af838",
+    "bytes": 4574159
+  },
+  "checkpoint_n_extra_declared": 212,
+  "checkpoint_n_extra_from_weights": 200,
+  "mat2vec_files": {
+    "pretrained_embeddings": {
+      "sha256": "1b0257d3295e571cbe87690c0bc0cbebdbe5b7a3ecf2299dc50eb4c7183e73c8",
+      "bytes": 36633231
+    },
+    "pretrained_embeddings.wv.vectors.npy": {
+      "sha256": "11c21e77f046446a000e37b236e6e97ae2a44dc86cca8e042732794e14dc6dfd",
+      "bytes": 423748928
+    },
+    "pretrained_embeddings.trainables.syn1neg.npy": {
+      "sha256": "1dadad42f34b98c1ecead523bc555ceffce41055170543535e90623ceab0c086",
+      "bytes": 423748928
+    }
+  },
+  "feature_shape": [
+    312,
+    532
+  ],
+  "feature_n_extra": 200,
+  "per_fold": [
+    {
+      "fold": 0,
+      "test_samples": 63,
+      "proxy_model_method": "mean of 5 seed-specific normalized inputs, using a single archived averaged-weight state",
+      "replay_vs_submission_mean_absolute_difference_mpa": 608.3635864257812,
+      "replay_vs_submission_max_abs_difference_mpa": 1335.961181640625,
+      "submitted_mae_mpa": 114.3248062133789,
+      "proxy_mae_mpa": 654.8377685546875,
+      "exact_pred_match_count_within_1e-3_mpa": 0
+    },
+    {
+      "fold": 1,
+      "test_samples": 63,
+      "proxy_model_method": "mean of 5 seed-specific normalized inputs, using a single archived averaged-weight state",
+      "replay_vs_submission_mean_absolute_difference_mpa": 519.7865600585938,
+      "replay_vs_submission_max_abs_difference_mpa": 1467.2239990234375,
+      "submitted_mae_mpa": 81.46387481689453,
+      "proxy_mae_mpa": 531.5126342773438,
+      "exact_pred_match_count_within_1e-3_mpa": 0
+    },
+    {
+      "fold": 2,
+      "test_samples": 62,
+      "proxy_model_method": "mean of 5 seed-specific normalized inputs, using a single archived averaged-weight state",
+      "replay_vs_submission_mean_absolute_difference_mpa": 628.5067749023438,
+      "replay_vs_submission_max_abs_difference_mpa": 1493.484619140625,
+      "submitted_mae_mpa": 80.55131530761719,
+      "proxy_mae_mpa": 617.3801879882812,
+      "exact_pred_match_count_within_1e-3_mpa": 0
+    },
+    {
+      "fold": 3,
+      "test_samples": 62,
+      "proxy_model_method": "mean of 5 seed-specific normalized inputs, using a single archived averaged-weight state",
+      "replay_vs_submission_mean_absolute_difference_mpa": 417.8075256347656,
+      "replay_vs_submission_max_abs_difference_mpa": 1371.50390625,
+      "submitted_mae_mpa": 90.49153137207031,
+      "proxy_mae_mpa": 429.9426574707031,
+      "exact_pred_match_count_within_1e-3_mpa": 0
+    },
+    {
+      "fold": 4,
+      "test_samples": 62,
+      "proxy_model_method": "mean of 5 seed-specific normalized inputs, using a single archived averaged-weight state",
+      "replay_vs_submission_mean_absolute_difference_mpa": 723.773193359375,
+      "replay_vs_submission_max_abs_difference_mpa": 1753.4942626953125,
+      "submitted_mae_mpa": 89.18270111083984,
+      "proxy_mae_mpa": 696.5037231445312,
+      "exact_pred_match_count_within_1e-3_mpa": 0
+    }
+  ],
+  "total_samples_evaluated": 312,
+  "exact_value_matches_within_1e-3_mpa": 0,
+  "elapsed_seconds": 23.2,
+  "conclusion": "Published fold-averaged weight states are not the original 25 seed checkpoints and cannot alone guarantee reproduction of mean-of-predictions; this tests their numerical behavior, not a faithful ensemble replay."
+}
