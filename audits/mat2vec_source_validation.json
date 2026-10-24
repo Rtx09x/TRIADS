@@ -1,0 +1,11 @@
+{
+  "checked_utc": "2026-10-24T09:05:29.385444+00:00",
+  "files": {
+    "pretrained_embeddings": "1b0257d3295e571cbe87690c0bc0cbebdbe5b7a3ecf2299dc50eb4c7183e73c8",
+    "pretrained_embeddings.trainables.syn1neg.npy": "1dadad42f34b98c1ecead523bc555ceffce41055170543535e90623ceab0c086",
+    "pretrained_embeddings.wv.vectors.npy": "11c21e77f046446a000e37b236e6e97ae2a44dc86cca8e042732794e14dc6dfd"
+  },
+  "source_commit": "1cf242c9a8abeee75924fd60c5cabae6fb1a8ed1",
+  "source_sha256": "033ed3153a5010231fb132491a7b43c98005536d7aa18090f546bb9a694c3371",
+  "status": "passed"
+}
