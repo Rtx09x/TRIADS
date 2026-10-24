@@ -2,12 +2,12 @@
 
 ### A High-Precision Deep Learning Architecture for Materials Property Prediction on Sparse Datasets
 
-[![HF Model](https://img.shields.io/badge/🤗_Model-Rtx09%2FTRIADS-yellow)](https://huggingface.co/Rtx09/TRIADS)
+[![HF Model](https://img.shields.io/badge/🤗_Model-Rtx09%2FTRIADS-yellow)](https://huggingface.co/Rtx09x/TRIADS)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 
-> 🔗 **[Download Pretrained Weights](https://huggingface.co/Rtx09/TRIADS)** · **[Read the Paper](triads_paper.pdf)**
+> 🔗 **[Download Pretrained Weights](https://huggingface.co/Rtx09x/TRIADS)** · **[Read the Paper](triads_paper.pdf)**
 
 ---
 
@@ -32,7 +32,7 @@ TRIADS has been validated across **six Matbench benchmarks** through a combined 
 | `matbench_jdft2d` | Exfol. energy | 636 | **35.89 ± 12.40 meV/atom** | 75K | HybridTRIADS V4 |
 | `matbench_phonons` | Peak phonon freq. | 1,265 | **41.91 ± 4.04 cm⁻¹** | 247K | GraphTRIADS V6 |
 
-All results follow the exact Matbench 5-fold nested cross-validation protocol (`KFold(n_splits=5, shuffle=True, random_state=18012019)`), using only training fold data for featurizer fitting and target normalization — no test data leakage at any stage.
+Benchmarks use Matbench's prescribed five-fold splits. The `matbench_steels` experiment reconstructs the official outer folds using `KFold(n_splits=5, shuffle=True, random_state=18012019)` and uses a separate validation holdout from each outer training pool for early stopping. Fold membership has been checked independently; historical cross-version model selection is discussed separately in the [RudraNet submission](https://github.com/materialsproject/matbench/pull/360).
 
 ### Selected Comparisons
 
@@ -252,7 +252,7 @@ TRIADS/
     └── research_notes/                # All experiment logs, per-version JSON metrics
 ```
 
-**Pretrained weights** are hosted on HuggingFace: → [huggingface.co/Rtx09/TRIADS](https://huggingface.co/Rtx09/TRIADS)
+**Pretrained weights** are hosted on HuggingFace: → [huggingface.co/Rtx09/TRIADS](https://huggingface.co/Rtx09x/TRIADS)
 
 ---
 
@@ -293,38 +293,46 @@ python model.py
 
 ### Loading Pretrained Weights
 
+The steels archive is available in the Hugging Face repository at
+[`weights/steels/weights.pt`](https://huggingface.co/Rtx09x/TRIADS/tree/main/weights/steels).
+It contains one saved model state per Matbench fold.
+
 ```python
 from huggingface_hub import hf_hub_download
+from matbench_steels.model import DeepHybridTRM
 import torch
 
-# Download a benchmark's compiled weights (one file = all 5 folds)
-path = hf_hub_download(repo_id="Rtx09/TRIADS", filename="steels/weights.pt")
-ckpt = torch.load(path, map_location="cpu")
+checkpoint_path = hf_hub_download(
+    repo_id="Rtx09x/TRIADS",
+    filename="weights/steels/weights.pt",
+)
+checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
 
-# ckpt contains:
-#   ckpt['folds']   -> list of 5 dicts, each with 'model_state' and 'test_mae'
-#   ckpt['n_extra'] -> int (required for model init)
-#   ckpt['config']  -> dict with d_attn, d_hidden, ff_dim, dropout, max_steps
+# Infer the actual extra-descriptor width from the saved parameter shape.
+# Use the checkpoint's tensor dimensions for constructing this archived model.
+config = checkpoint["config"]
+first_state = checkpoint["folds"][0]["model_state"]
+n_extra = first_state["pool.0.weight"].shape[1] - config["d_attn"]
 
-from matbench_steels.model import DeepHybridTRM, ExpandedFeaturizer
-
-featurizer = ExpandedFeaturizer()  # Downloads Mat2Vec on first run
 models = []
-for fold_entry in ckpt['folds']:
-    model = DeepHybridTRM(n_extra=ckpt['n_extra'], **ckpt['config'])
-    model.load_state_dict(fold_entry['model_state'])
+for fold in checkpoint["folds"]:
+    model = DeepHybridTRM(n_extra=n_extra, **config)
+    model.load_state_dict(fold["model_state"], strict=True)
     model.eval()
     models.append(model)
 
-# Ensemble inference
-import numpy as np
-feat = featurizer.featurize("Fe0.7Cr0.15Ni0.15")  # shape (n_features,)
-x = torch.tensor(feat[None], dtype=torch.float32)
-preds = [m(x).item() for m in models]
-print(f"Predicted yield strength: {np.mean(preds):.1f} MPa")
+print(f"Loaded {len(models)} Matbench fold models.")
 ```
 
-Pretrained models are available for all six benchmarks. See [huggingface.co/Rtx09/TRIADS](https://huggingface.co/Rtx09/TRIADS) for the full checkpoint index and loading instructions.
+The archive contains five fold-level averaged-weight states, not the
+original 25 seed/fold checkpoints. The submitted five-seed
+*average-of-predictions* results and reproducibility details are documented
+in the [Matbench RudraNet submission](https://github.com/materialsproject/matbench/pull/360).
+Preparing real material-property predictions additionally requires the
+training-compatible feature transformation for each fold.
+
+Pretrained weights for the other benchmarks are in
+[the TRIADS Hugging Face repository](https://huggingface.co/Rtx09x/TRIADS).
 
 ---
 
@@ -350,7 +358,7 @@ Raw training metrics for every version of every benchmark are in [`archive/resea
   year    = {2026},
   doi     = {10.5281/zenodo.19200579},
   url     = {https://doi.org/10.5281/zenodo.19200579},
-  note    = {Code: https://github.com/Rtx09x/TRIADS; Models: https://huggingface.co/Rtx09/TRIADS}
+  note    = {Code: https://github.com/Rtx09x/TRIADS; Models: https://huggingface.co/Rtx09x/TRIADS}
 }
 ```
 
