@@ -1,0 +1,61 @@
+name: TRIADS steels CPU smoke test
+on:
+  push:
+    branches: [audit/mat2vec-sha256-20261024]
+    paths: [.github/workflows/triads-steels-smoke.yml]
+permissions:
+  contents: write
+jobs:
+  cpu-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install inference environment from TRIADS
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.3.1
+          python -m pip install --disable-pip-version-check --no-cache-dir numpy==1.26.4 pandas==2.2.2 scipy==1.13.1 scikit-learn==1.5.1 pymatgen==2024.7.18 matminer==0.9.3 gensim==4.3.3 matplotlib==3.9.4 tqdm==4.66.4 huggingface_hub==0.24.7
+          python -m pip check
+      - name: Load real TRIADS model and test numerical forward path
+        shell: bash
+        run: |
+          python - <<'PY'
+          import sys,json,urllib.request,datetime,pathlib,importlib.util,traceback
+          report={'checked_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'python':sys.version}
+          try:
+              import torch, numpy, sklearn, pymatgen, matminer, gensim, pandas, matplotlib
+              report['versions']={x.__name__:getattr(x,'__version__','unknown') for x in [torch,numpy,sklearn,pymatgen,matminer,gensim,pandas,matplotlib]}
+              model_path=pathlib.Path('matbench_steels/model.py')
+              spec=importlib.util.spec_from_file_location('triads_steels',str(model_path))
+              mod=importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(mod)
+              model=mod.DeepHybridTRM(n_extra=128, d_attn=64, d_hidden=96, ff_dim=150, max_steps=20)
+              model.eval()
+              with torch.no_grad():
+                  y=model(torch.zeros(2,132+128+200,dtype=torch.float32))
+              report['parameters_for_synthetic_n_extra_128']=model.count_parameters()
+              report['output_shape']=list(y.shape)
+              report['output_all_finite']=bool(torch.isfinite(y).all())
+              report['status']='passed' if report['output_all_finite'] and list(y.shape)==[2] else 'failed'
+          except Exception as exc:
+              report['status']='error'
+              report['error']=repr(exc)
+              report['traceback']=traceback.format_exc()[-3000:]
+          pathlib.Path('audits/triads_steels_cpu_smoke.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          if report['status']!='passed':sys.exit(1)
+          PY
+      - name: Persist successful test
+        if: success()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/triads_steels_cpu_smoke.json
+          git commit -m "Verify TRIADS steels inference environment [skip ci]"
+          git pull --rebase origin audit/mat2vec-sha256-20261024
+          git push origin HEAD:audit/mat2vec-sha256-20261024
