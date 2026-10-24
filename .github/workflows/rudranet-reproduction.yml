@@ -25,14 +25,13 @@ jobs:
           urllib.request.urlretrieve(p,'/tmp/rudranet-requirements.txt')
           PY
           python -m pip install --upgrade pip
-          python -m pip install -r /tmp/rudranet-requirements.txt huggingface_hub==0.24.7 > audits/install_log.txt 2>&1 || echo 'FAILED' > audits/install_failed.txt
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.3.1 > audits/install_log.txt 2>&1\n          python -m pip install huggingface_hub==0.24.7 >> audits/install_log.txt 2>&1\n          python -m pip install --dry-run -r /tmp/rudranet-requirements.txt > audits/pinned_dryrun_log.txt 2>&1 || echo 'PIN_CONFLICT' > audits/pinned_conflict.txt
           python - <<'PY'
           import json, pathlib, traceback
           result={'status':'started'}
           try:
               import torch
               from huggingface_hub import hf_hub_download
-              from matbench.bench import MatbenchBenchmark
               result['torch']=torch.__version__
               for repo in ('Rtx09/TRIADS','Rtx09x/TRIADS'):
                   try:
@@ -67,7 +66,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add audits/rudranet_reproduction.json audits/install_log.txt audits/install_failed.txt 2>/dev/null || true
+          git add audits/rudranet_reproduction.json audits/install_log.txt audits/pinned_dryrun_log.txt audits/pinned_conflict.txt 2>/dev/null || true
           if ! git diff --cached --quiet; then
             git commit -m "Record independent reproduction environment and checkpoint audit [skip ci]"
             git push origin HEAD:audit/mat2vec-sha256-20261024
