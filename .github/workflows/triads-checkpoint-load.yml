@@ -1,0 +1,78 @@
+name: TRIADS archived checkpoint strict load
+on:
+  push:
+    branches: [audit/mat2vec-sha256-20261024]
+    paths: [.github/workflows/triads-checkpoint-load.yml]
+permissions:
+  contents: write
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install PyTorch CPU
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir torch==2.3.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Strictly load all five real published checkpoints into TRIADS V13A model
+        shell: bash
+        run: |
+          python - <<'PY'
+          import ast,datetime,hashlib,io,json,pathlib,traceback,urllib.request,sys
+          report={'checked_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                  'task':'matbench_steels','file':'Rtx09x/TRIADS:weights/steels/weights.pt'}
+          try:
+              import torch,torch.nn as nn
+              def get(url):
+                  with urllib.request.urlopen(url,timeout=120) as u:return u.read()
+              base='https://huggingface.co/Rtx09x/TRIADS/resolve/main/weights/steels/weights.pt'
+              raw=get(base)
+              sha=hashlib.sha256(raw).hexdigest()
+              expected='64ee164db899d44365bea3a67ef258d7e122144d4088357dd56af10a1c0af838'
+              assert sha==expected,(sha,expected)
+              weights=torch.load(io.BytesIO(raw),map_location='cpu',weights_only=True)
+              source=get('https://raw.githubusercontent.com/Rtx09x/TRIADS/main/matbench_steels/model.py').decode('utf-8')
+              module=ast.parse(source)
+              nodes=[n for n in module.body if isinstance(n,ast.ClassDef) and n.name=='DeepHybridTRM']
+              assert len(nodes)==1
+              env={'torch':torch,'nn':nn}
+              exec(compile(ast.Module(body=nodes,type_ignores=[]),'DeepHybridTRM','exec'),env)
+              Class=env['DeepHybridTRM']
+              config=weights['config']; extra=int(weights['n_extra'])
+              assert len(weights['folds'])==5
+              fold_reports=[]
+              for i,f in enumerate(weights['folds']):
+                  model=Class(n_extra=extra,**config)
+                  loaded=model.load_state_dict(f['model_state'],strict=True)
+                  model.eval()
+                  with torch.no_grad():
+                      prediction=model(torch.zeros(2,132+extra+200,dtype=torch.float32))
+                  assert torch.isfinite(prediction).all()
+                  assert model.count_parameters()==224685
+                  fold_reports.append({'fold':i+1,'parameters':model.count_parameters(),
+                                       'seed_label':f.get('seed'),
+                                       'output_shape':list(prediction.shape),
+                                       'strict_load':'passed'})
+              report.update({'status':'passed','torch':torch.__version__,'sha256':sha,
+                        'n_extra':extra,'checkpoint_states':len(fold_reports),
+                        'folds':fold_reports,
+                        'scope':'Architecture/weights/synthetic forward. Historical raw fold predictions were not regenerated.'})
+          except Exception as exc:
+              report['status']='error';report['error']=repr(exc)
+              report['traceback']=traceback.format_exc()[-1800:]
+          pathlib.Path('audits/triads_checkpoint_load.json').write_text(json.dumps(report,indent=2,default=str)+'\n')
+          print(json.dumps(report,indent=2,default=str),flush=True)
+          if report['status']!='passed':sys.exit(1)
+          PY
+      - name: Commit only successful checkpoint report
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/triads_checkpoint_load.json
+          git commit -m "Record TRIADS checkpoint strict-load verification [skip ci]"
+          git pull --rebase origin audit/mat2vec-sha256-20261024
+          git push origin HEAD:audit/mat2vec-sha256-20261024
