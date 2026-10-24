@@ -1,0 +1,71 @@
+name: TRIADS steels feature-width verification
+on:
+  push:
+    branches: [audit/mat2vec-sha256-20261024]
+    paths: [.github/workflows/triads-steels-feature-audit.yml]
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Matminer features
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir numpy==1.26.4 scipy==1.13.1 matminer==0.9.3 pymatgen==2024.7.18 pandas==2.2.2
+      - name: Check original exact descriptor pipeline on all 312 compositions
+        shell: bash
+        run: |
+          python - <<'PY'
+          import collections,datetime,json,pathlib,traceback
+          from matminer.datasets import load_dataset
+          from matminer.featurizers.composition import ElementFraction,Stoichiometry,ValenceOrbital,IonProperty,BandCenter
+          from matminer.featurizers.base import MultipleFeaturizer
+          from pymatgen.core import Composition
+          report={'checked_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                  'matminer_version':'0.9.3'}
+          try:
+              df=load_dataset('matbench_steels')
+              report['n_samples']=len(df)
+              features=MultipleFeaturizer([ElementFraction(),Stoichiometry(),ValenceOrbital(),IonProperty(),BandCenter()])
+              dims=collections.Counter(); errors=collections.Counter(); examples={}
+              inferred_extra=None; modeled_dims=[]
+              for i,c in enumerate(df['composition']):
+                  try:
+                      x=features.featurize(Composition(c))
+                      dims[len(x)]+=1
+                      n=len(x)
+                  except Exception as exc:
+                      category=type(exc).__name__+': '+str(exc)
+                      errors[category]+=1
+                      examples.setdefault(category,{'row':i+1,'composition':str(c)})
+                      n=inferred_extra or 200
+                  if inferred_extra is None:inferred_extra=n
+                  modeled_dims.append(n)
+              report['normal_descriptor_dimensions']=dict(dims)
+              report['exceptions']=dict(errors)
+              report['error_examples']=examples
+              report['initial_code_n_extra']=inferred_extra
+              report['simulated_input_widths']=dict(collections.Counter(modeled_dims))
+              report['uniform_width']=len(set(modeled_dims))==1
+              report['status']='inspected'
+          except Exception as exc:
+              report['status']='error';report['traceback']=traceback.format_exc()[-2400:]
+          pathlib.Path('audits/triads_feature_width.json').write_text(json.dumps(report,indent=2,default=str)+'\n')
+          print(json.dumps(report,indent=2,default=str),flush=True)
+          PY
+      - name: Save technical audit report
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/triads_feature_width.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Record steel composition feature-width audit [skip ci]"
+            git pull --rebase origin audit/mat2vec-sha256-20261024
+            git push origin HEAD:audit/mat2vec-sha256-20261024
+          fi
