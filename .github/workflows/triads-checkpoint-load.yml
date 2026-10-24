@@ -41,7 +41,12 @@ jobs:
               env={'torch':torch,'nn':nn}
               exec(compile(ast.Module(body=nodes,type_ignores=[]),'DeepHybridTRM','exec'),env)
               Class=env['DeepHybridTRM']
-              config=weights['config']; extra=int(weights['n_extra'])
+              config=weights['config']
+              declared_extra=int(weights['n_extra'])
+              extra=int(weights['folds'][0]['model_state']['pool.0.weight'].shape[1]-config['d_attn'])
+              report['declared_n_extra']=declared_extra
+              report['shape_derived_n_extra']=extra
+              report['checkpoint_metadata_n_extra_matches_weights']=(declared_extra==extra)
               assert len(weights['folds'])==5
               fold_reports=[]
               for i,f in enumerate(weights['folds']):
