@@ -1,0 +1,80 @@
+name: Audit Mat2Vec upstream SHA256
+on:
+  push:
+    branches:
+      - audit/mat2vec-sha256-20261024
+    paths:
+      - .github/workflows/mat2vec-sha256-audit.yml
+permissions:
+  contents: write
+jobs:
+  hash-current-upstream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download three official Mat2Vec assets and compute SHA256 (no deserialization)
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import datetime
+          import hashlib
+          import json
+          import pathlib
+          import urllib.request
+
+          base = "https://storage.googleapis.com/mat2vec/"
+          names = (
+              "pretrained_embeddings",
+              "pretrained_embeddings.wv.vectors.npy",
+              "pretrained_embeddings.trainables.syn1neg.npy",
+          )
+          entries = {}
+          for name in names:
+              url = base + name
+              req = urllib.request.Request(url, headers={"User-Agent": "Mat2Vec-SHA256-GitHub-Actions/1.0"})
+              with urllib.request.urlopen(req, timeout=150) as response:
+                  if response.status != 200:
+                      raise RuntimeError(f"HTTP {response.status}: {url}")
+                  sha = hashlib.sha256()
+                  length = 0
+                  while True:
+                      chunk = response.read(1024 * 1024)
+                      if not chunk:
+                          break
+                      sha.update(chunk)
+                      length += len(chunk)
+                  metadata = {
+                      "sha256": sha.hexdigest(),
+                      "size_bytes": length,
+                      "gcs_generation": response.headers.get("x-goog-generation"),
+                      "gcs_metageneration": response.headers.get("x-goog-metageneration"),
+                      "etag": response.headers.get("ETag"),
+                      "last_modified": response.headers.get("Last-Modified"),
+                  }
+              if length == 0:
+                  raise RuntimeError("Empty upstream file: " + name)
+              entries[name] = metadata
+              print(name + ": " + sha.hexdigest() + " (" + str(length) + " bytes)", flush=True)
+
+          manifest = {
+              "source": base,
+              "observed_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "status": "captured-from-current-upstream-not-historically-verified",
+              "files": entries,
+          }
+          output = pathlib.Path("audits/mat2vec_sha256_20261024.json")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+          print("Wrote manifest " + str(output), flush=True)
+          PY
+      - name: Save checksum manifest to audit branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/mat2vec_sha256_20261024.json
+          git commit -m "Record current upstream Mat2Vec SHA256 checksums [skip ci]"
+          git push origin HEAD:audit/mat2vec-sha256-20261024
