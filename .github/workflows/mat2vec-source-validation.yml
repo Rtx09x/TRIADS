@@ -1,0 +1,58 @@
+name: Validate pinned Mat2Vec source integration
+on:
+  push:
+    branches:
+      - audit/mat2vec-sha256-20261024
+    paths:
+      - .github/workflows/mat2vec-source-validation.yml
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile pinned RudraNet Python and compare manifests
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import datetime
+          import hashlib
+          import json
+          import pathlib
+          import urllib.request
+
+          base = "https://raw.githubusercontent.com/Rtx09x/matbench/1cf242c9a8abeee75924fd60c5cabae6fb1a8ed1/benchmarks/matbench_v0.1_RudraNet/"
+          def read(remote):
+              with urllib.request.urlopen(remote, timeout=60) as req:
+                  return req.read()
+          src = read(base + "trm13.py")
+          code = src.decode("utf-8")
+          compile(code, "trm13.py", "exec")
+          assert "Mat2Vec cache checksum mismatch" in code
+          assert "mat2vec_sha256.json" in code
+          pinned = json.loads(read(base + "mat2vec_sha256.json"))
+          current = json.loads(pathlib.Path("audits/mat2vec_sha256_20261024.json").read_text())
+          assert pinned["source"] == current["source"]
+          assert pinned["files"] == current["files"]
+          assert len(pinned["files"]) == 3
+          print("PASS: Python source compiles and pinned manifest matches audit results")
+          result = {
+              "status": "passed",
+              "checked_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "source_commit": "1cf242c9a8abeee75924fd60c5cabae6fb1a8ed1",
+              "source_sha256": hashlib.sha256(src).hexdigest(),
+              "files": {k: v["sha256"] for k,v in pinned["files"].items()},
+          }
+          pathlib.Path("audits/mat2vec_source_validation.json").write_text(
+              json.dumps(result, indent=2, sort_keys=True) + "\n"
+          )
+          PY
+      - name: Persist validation report to audit branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/mat2vec_source_validation.json
+          git commit -m "Record checksum integration validation [skip ci]"
+          git push origin HEAD:audit/mat2vec-sha256-20261024
