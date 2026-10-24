@@ -1,0 +1,19 @@
+{
+  "checked_utc": "2026-10-24T11:03:45.831505+00:00",
+  "task": "matbench_steels",
+  "verification": "old prediction data -> official Matbench record -> official to_file -> equality",
+  "export_returncode": 0,
+  "export_stdout_tail": " from https://ml.materialsproject.org/projects/matbench_steels.json.gz to /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/matminer/datasets/matbench_steels.json.gz\n2026-10-24 11:03:48 INFO     Initialized benchmark 'matbench_v0.1' with 1 tasks: \n['matbench_steels']\n2026-10-24 11:03:48 INFO     Recorded fold matbench_steels-0 successfully.\n2026-10-24 11:03:48 INFO     Recorded fold matbench_steels-1 successfully.\n2026-10-24 11:03:48 INFO     Recorded fold matbench_steels-2 successfully.\n2026-10-24 11:03:48 INFO     Recorded fold matbench_steels-3 successfully.\n2026-10-24 11:03:48 INFO     Recorded fold matbench_steels-4 successfully.\n2026-10-24 11:03:48 INFO     User metadata added successfully!\n2026-10-24 11:03:48 INFO     Successfully wrote MatbenchBenchmark to file '/tmp/tmph7e9kqzw/rebuilt.json.gz'.\n2026-10-24 11:03:48 INFO     Initialized benchmark 'matbench_v0.1' with 1 tasks: \n['matbench_steels']\n2026-10-24 11:03:48 WARNING  To add new data to this benchmark, the benchmark must be loaded with .load(). Alternatively, load individual tasks with MatbenchTask.load().\nPASS: recorded all 5 folds using the official Matbench API: /tmp/tmph7e9kqzw/rebuilt.json.gz\n",
+  "n_unique_samples": 312,
+  "mismatch_count": 0,
+  "fold_mae": {
+    "fold_0": 114.32480313740078,
+    "fold_1": 81.463865249876,
+    "fold_2": 80.55130930254535,
+    "fold_3": 90.49153383316533,
+    "fold_4": 89.18270303049393
+  },
+  "matbench_is_valid": true,
+  "matbench_is_recorded": true,
+  "status": "passed"
+}
