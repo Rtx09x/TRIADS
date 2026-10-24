@@ -1,0 +1,167 @@
+name: TRIADS submitted prediction replay audit
+on:
+  push:
+    branches:
+      - audit/mat2vec-sha256-20261024
+    paths:
+      - .github/workflows/triads-prediction-replay.yml
+permissions:
+  contents: write
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install verified steels inference environment
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir torch==2.3.1 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --disable-pip-version-check --no-cache-dir numpy==1.26.4 pandas==2.2.2 scipy==1.13.1 scikit-learn==1.5.1 pymatgen==2024.7.18 matminer==0.9.3 gensim==4.3.3 matplotlib==3.9.4 tqdm==4.66.4 huggingface_hub==0.24.7
+          python -m pip check
+      - name: Evaluate archived five fold models on official test IDs
+        shell: bash
+        run: |
+          python - <<'PY'
+          import collections, datetime, gzip, hashlib, io, json, os, pathlib, tempfile, time, traceback, urllib.request, sys
+          import numpy as np
+          import torch
+          from sklearn.model_selection import KFold
+          from sklearn.metrics import mean_absolute_error
+          from matminer.datasets import load_dataset
+          from pymatgen.core import Composition
+          import importlib.util
+
+          torch.set_num_threads(2)
+          report={
+            "checked_utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "scope":"Best-effort historical saved-weight inference versus submitted raw predictions",
+            "model_repository":"Rtx09x/TRIADS",
+            "checkpoint":"weights/steels/weights.pt",
+            "independent_per_seed_weights_available":False,
+            "historical_scalers_embedded_in_checkpoint":False,
+            "status":"started"
+          }
+          dst=pathlib.Path('audits/triads_prediction_replay.json')
+          def save():
+              dst.parent.mkdir(parents=True,exist_ok=True)
+              dst.write_text(json.dumps(report,indent=2,default=str)+'\n')
+          def grab(url, dest, expected_hash=None):
+              h=hashlib.sha256()
+              dest=pathlib.Path(dest)
+              dest.parent.mkdir(parents=True,exist_ok=True)
+              with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'TRIADS-independent-prediction-audit/1.0'}),timeout=180) as u, dest.open('wb') as w:
+                  while True:
+                      b=u.read(1024*1024)
+                      if not b:break
+                      h.update(b);w.write(b)
+              actual=h.hexdigest()
+              if expected_hash and actual!=expected_hash:
+                  raise ValueError('Integrity hash mismatch '+url+': '+actual)
+              return {'sha256':actual,'bytes':dest.stat().st_size}
+
+          try:
+              start=time.time()
+              model_file=pathlib.Path('matbench_steels/model.py')
+              spec=importlib.util.spec_from_file_location('triads_steels',str(model_file))
+              module=importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(module)
+
+              with tempfile.TemporaryDirectory() as temp:
+                  t=pathlib.Path(temp)
+                  weight_file=t/'weights.pt'
+                  report['checkpoint_download']=grab(
+                    'https://huggingface.co/Rtx09x/TRIADS/resolve/main/weights/steels/weights.pt',
+                    weight_file,
+                    '64ee164db899d44365bea3a67ef258d7e122144d4088357dd56af10a1c0af838'
+                  )
+                  checkpoint=torch.load(weight_file,map_location='cpu',weights_only=True)
+                  assert len(checkpoint['folds'])==5
+                  n_extra=int(checkpoint['folds'][0]['model_state']['pool.0.weight'].shape[1]-checkpoint['config']['d_attn'])
+                  report['checkpoint_n_extra_declared']=int(checkpoint['n_extra'])
+                  report['checkpoint_n_extra_from_weights']=n_extra
+
+                  # The three upstream serialized Mat2Vec components are checked BEFORE load.
+                  hashes={
+                    'pretrained_embeddings':'1b0257d3295e571cbe87690c0bc0cbebdbe5b7a3ecf2299dc50eb4c7183e73c8',
+                    'pretrained_embeddings.wv.vectors.npy':'11c21e77f046446a000e37b236e6e97ae2a44dc86cca8e042732794e14dc6dfd',
+                    'pretrained_embeddings.trainables.syn1neg.npy':'1dadad42f34b98c1ecead523bc555ceffce41055170543535e90623ceab0c086',
+                  }
+                  cache=t/'mat2vec_cache'
+                  report['mat2vec_files']={}
+                  for name,digest in hashes.items():
+                      report['mat2vec_files'][name]=grab('https://storage.googleapis.com/mat2vec/'+name,cache/name,digest)
+                      save()
+                  # Pass cache to original implementation: it only loads existing assets.
+                  featurizer=module.ExpandedFeaturizer(cache=str(cache))
+                  df=load_dataset('matbench_steels')
+                  compositions=[Composition(x) for x in df['composition'].tolist()]
+                  targets=np.asarray(df['yield strength'].tolist(),np.float32)
+                  X=featurizer.featurize_all(compositions)
+                  report['feature_shape']=list(X.shape)
+                  report['feature_n_extra']=featurizer.n_extra
+                  if n_extra!=featurizer.n_extra:raise ValueError('Model tensor width differs from loaded feature width')
+
+                  submitted=t/'results.json.gz'
+                  grab('https://raw.githubusercontent.com/Rtx09x/matbench/163f6dcb98677f10f00855abfc645a740ac627e2/benchmarks/matbench_v0.1_RudraNet/results.json.gz',submitted)
+                  with gzip.open(submitted,'rt') as u: result=json.load(u)
+                  folds=result['tasks']['matbench_steels']['results']
+                  seeds=[42,123,7,0,99]
+                  per_fold=[]
+                  for i,(train_valid,test_idx) in enumerate(KFold(n_splits=5,shuffle=True,random_state=18012019).split(range(len(X)))):
+                      sd=checkpoint['folds'][i]['model_state']
+                      model=module.DeepHybridTRM(n_extra=n_extra,**checkpoint['config'])
+                      model.load_state_dict(sd,strict=True)
+                      model.eval()
+                      mbids=[f'mb-steels-{int(ix)+1:03d}' for ix in test_idx]
+                      submitted_pred=np.array([folds['fold_'+str(i)]['data'][key] for key in mbids],np.float32)
+                      proxy_predictions=[]
+                      for seed in seeds:
+                          tri,vli=module.strat_split(targets[train_valid],0.15,seed+i)
+                          scaler=module.StandardScaler().fit(X[train_valid][tri])
+                          features=np.nan_to_num(scaler.transform(X[test_idx]),nan=0.0).astype(np.float32)
+                          with torch.no_grad():
+                              pred=np.concatenate([model(torch.tensor(features[k:k+32])).detach().cpu().numpy()
+                                                 for k in range(0,len(features),32)])
+                          proxy_predictions.append(pred)
+                      approximated=np.stack(proxy_predictions).mean(axis=0)
+                      difference=approximated-submitted_pred
+                      per_fold.append({
+                         'fold':i, 'test_samples':len(test_idx),
+                         'proxy_model_method':'mean of 5 seed-specific normalized inputs, using a single archived averaged-weight state',
+                         'replay_vs_submission_mean_absolute_difference_mpa':float(np.abs(difference).mean()),
+                         'replay_vs_submission_max_abs_difference_mpa':float(np.abs(difference).max()),
+                         'submitted_mae_mpa':float(mean_absolute_error(targets[test_idx],submitted_pred)),
+                         'proxy_mae_mpa':float(mean_absolute_error(targets[test_idx],approximated)),
+                         'exact_pred_match_count_within_1e-3_mpa':int(np.sum(np.abs(difference)<1e-3))
+                      })
+                      report['per_fold']=per_fold
+                      save()
+                  report['total_samples_evaluated']=sum(f['test_samples'] for f in per_fold)
+                  report['exact_value_matches_within_1e-3_mpa']=sum(f['exact_pred_match_count_within_1e-3_mpa'] for f in per_fold)
+                  report['elapsed_seconds']=round(time.time()-start,1)
+                  report['status']='completed_proxy_comparison'
+                  report['conclusion']='Published fold-averaged weight states are not the original 25 seed checkpoints and cannot alone guarantee reproduction of mean-of-predictions; this tests their numerical behavior, not a faithful ensemble replay.'
+          except Exception as e:
+              report['status']='replay_blocked'
+              report['error_type']=type(e).__name__
+              report['error']=str(e)[:900]
+              report['traceback']=traceback.format_exc()[-3000:]
+          save()
+          print(json.dumps(report,indent=2,default=str),flush=True)
+          PY
+      - name: Save audit report independently of comparison result
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/triads_prediction_replay.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Record archived TRIADS prediction comparison [skip ci]"
+            git pull --rebase origin audit/mat2vec-sha256-20261024
+            git push origin HEAD:audit/mat2vec-sha256-20261024
+          fi
