@@ -37,6 +37,19 @@ jobs:
               model.eval()
               with torch.no_grad():
                   y=model(torch.zeros(2,132+128+200,dtype=torch.float32))
+              # Cross-check real Matminer feature width and error behavior.
+              from matminer.featurizers.composition import ElementFraction, Stoichiometry, ValenceOrbital, IonProperty, BandCenter
+              from matminer.featurizers.base import MultipleFeaturizer
+              from pymatgen.core import Composition
+              extra_featurizer=MultipleFeaturizer([ElementFraction(), Stoichiometry(), ValenceOrbital(), IonProperty(), BandCenter()])
+              report['extra_feature_checks']=[]
+              for sample in ['Fe', 'Fe0.7Cr0.15Ni0.15', 'Fe0.8C0.2']:
+                  entry={'composition':sample}
+                  try:
+                      entry['dimensions']=len(extra_featurizer.featurize(Composition(sample)))
+                  except Exception as ex:
+                      entry['error']=type(ex).__name__+': '+str(ex)[:400]
+                  report['extra_feature_checks'].append(entry)
               report['parameters_for_synthetic_n_extra_128']=model.count_parameters()
               report['output_shape']=list(y.shape)
               report['output_all_finite']=bool(torch.isfinite(y).all())
