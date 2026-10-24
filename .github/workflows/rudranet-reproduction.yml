@@ -1,0 +1,74 @@
+name: RudraNet independent reproduction audit
+on:
+  push:
+    branches: [audit/mat2vec-sha256-20261024]
+    paths: [.github/workflows/rudranet-reproduction.yml]
+permissions:
+  contents: write
+jobs:
+  inspect-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Resolve pinned packages and inspect checkpoint
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p audits
+          python - <<'PY'
+          import urllib.request, pathlib
+          p='https://raw.githubusercontent.com/Rtx09x/matbench/1cf242c9a8abeee75924fd60c5cabae6fb1a8ed1/benchmarks/matbench_v0.1_RudraNet/requirements-reproduction.txt'
+          urllib.request.urlretrieve(p,'/tmp/rudranet-requirements.txt')
+          PY
+          python -m pip install --upgrade pip
+          python -m pip install -r /tmp/rudranet-requirements.txt huggingface_hub==0.24.7 > audits/install_log.txt 2>&1 || echo 'FAILED' > audits/install_failed.txt
+          python - <<'PY'
+          import json, pathlib, traceback
+          result={'status':'started'}
+          try:
+              import torch
+              from huggingface_hub import hf_hub_download
+              from matbench.bench import MatbenchBenchmark
+              result['torch']=torch.__version__
+              for repo in ('Rtx09/TRIADS','Rtx09x/TRIADS'):
+                  try:
+                      path=hf_hub_download(repo_id=repo,filename='steels/weights.pt')
+                      result['hub_repo']=repo
+                      result['weights_bytes']=pathlib.Path(path).stat().st_size
+                      try:
+                          ckpt=torch.load(path,map_location='cpu',weights_only=True)
+                          result['safe_load']=True
+                      except Exception as exc:
+                          result['safe_load_error']=str(exc)
+                          raise
+                      result['checkpoint_keys']=list(ckpt) if isinstance(ckpt,dict) else [str(type(ckpt))]
+                      if isinstance(ckpt,dict):
+                          result['folds']=len(ckpt.get('folds',[]))
+                          result['per_fold_details']=[{'keys':list(f.keys()),'test_mae':f.get('test_mae'),'model_state_keys':len(f.get('model_state',{}))} for f in ckpt.get('folds',[])]
+                          result['config']=str(ckpt.get('config'))
+                      break
+                  except Exception as ex:
+                      result.setdefault('hub_errors',[]).append(repo+': '+str(ex))
+              result['status']='inspected' if 'checkpoint_keys' in result else 'checkpoint_unavailable'
+          except Exception as ex:
+              result['status']='error'
+              result['error']=str(ex)
+              result['traceback']=traceback.format_exc()[-3000:]
+          pathlib.Path('audits/rudranet_reproduction.json').write_text(json.dumps(result,indent=2,default=str)+'\n')
+          print(json.dumps(result,indent=2,default=str))
+          PY
+      - name: Save audit report
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/rudranet_reproduction.json audits/install_log.txt audits/install_failed.txt 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Record independent reproduction environment and checkpoint audit [skip ci]"
+            git push origin HEAD:audit/mat2vec-sha256-20261024
+          fi
