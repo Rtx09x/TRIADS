@@ -1,0 +1,69 @@
+name: TRIADS checkpoint artifact inspection
+on:
+  push:
+    branches: [audit/mat2vec-sha256-20261024]
+    paths: [.github/workflows/triads-weights-inspection.yml]
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect Hugging Face checkpoint without executing pickle
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import datetime, hashlib, io, json, pathlib, pickletools, urllib.request, zipfile
+          report={'observed_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                  'repo':'Rtx09x/TRIADS', 'file':'weights/steels/weights.pt'}
+          try:
+              url='https://huggingface.co/Rtx09x/TRIADS/resolve/main/weights/steels/weights.pt'
+              req=urllib.request.Request(url,headers={'User-Agent':'TRIADS-checkpoint-provenance-audit/1.0'})
+              with urllib.request.urlopen(req, timeout=150) as remote:
+                  h=hashlib.sha256()
+                  data=bytearray()
+                  while True:
+                      buf=remote.read(1024*1024)
+                      if not buf: break
+                      h.update(buf);data.extend(buf)
+              report['size_bytes']=len(data); report['sha256']=h.hexdigest()
+              report['zip_format']=zipfile.is_zipfile(io.BytesIO(data))
+              if report['zip_format']:
+                  with zipfile.ZipFile(io.BytesIO(data)) as z:
+                      entries=z.namelist()
+                      report['members_count']=len(entries)
+                      report['pickle_members']=[x for x in entries if x.endswith('data.pkl')]
+                      report['tensor_storage_count']=sum('/data/' in x for x in entries)
+                      for entry in report['pickle_members'][:1]:
+                          pickled=z.read(entry)
+                          ops=[]
+                          strings=[]
+                          globals_=[]
+                          for op,arg,pos in pickletools.genops(pickled):
+                              if op.name in ('SHORT_BINUNICODE','BINUNICODE','UNICODE') and isinstance(arg,str):
+                                  strings.append(arg)
+                              if op.name in ('GLOBAL','STACK_GLOBAL'):
+                                  globals_.append(str(arg))
+                          report['serialized_string_sample']=strings[:160]
+                          report['serialized_globals_sample']=globals_[:50]
+                          report['serialized_pickle_bytes']=len(pickled)
+              report['status']='artifact_inspected_without_deserialization'
+          except Exception as exc:
+              report['status']='error';report['error']=type(exc).__name__+': '+str(exc)
+          pathlib.Path('audits/triads_checkpoint_artifact.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2), flush=True)
+          PY
+      - name: Persist inspection evidence
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/triads_checkpoint_artifact.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Record steels checkpoint artifact inspection [skip ci]"
+            git pull --rebase origin audit/mat2vec-sha256-20261024
+            git push origin HEAD:audit/mat2vec-sha256-20261024
+          fi
