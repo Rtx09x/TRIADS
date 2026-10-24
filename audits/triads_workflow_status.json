@@ -1,0 +1,154 @@
+[
+  {
+    "id": 40088882512,
+    "workflow": ".github/workflows/triads-steels-compatibility.yml",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088882512",
+    "created_at": "2026-10-24T11:11:15Z"
+  },
+  {
+    "id": 40088883428,
+    "workflow": "TRIADS audit run diagnostics",
+    "status": "in_progress",
+    "conclusion": null,
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088883428",
+    "created_at": "2026-10-24T11:11:15Z"
+  },
+  {
+    "id": 40088418568,
+    "workflow": "TRIADS archived checkpoint strict load",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088418568",
+    "created_at": "2026-10-24T11:04:24Z"
+  },
+  {
+    "id": 40088417893,
+    "workflow": ".github/workflows/triads-steels-compatibility.yml",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088417893",
+    "created_at": "2026-10-24T11:04:23Z"
+  },
+  {
+    "id": 40088320299,
+    "workflow": ".github/workflows/triads-steels-compatibility.yml",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088320299",
+    "created_at": "2026-10-24T11:02:56Z"
+  },
+  {
+    "id": 40088321148,
+    "workflow": "TRIADS official Matbench exporter verification",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088321148",
+    "created_at": "2026-10-24T11:02:56Z"
+  },
+  {
+    "id": 40088244977,
+    "workflow": "TRIADS steels CPU smoke test",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088244977",
+    "created_at": "2026-10-24T11:01:51Z"
+  },
+  {
+    "id": 40088244292,
+    "workflow": ".github/workflows/triads-steels-compatibility.yml",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088244292",
+    "created_at": "2026-10-24T11:01:50Z"
+  },
+  {
+    "id": 40088166090,
+    "workflow": "TRIADS safe checkpoint structure audit",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088166090",
+    "created_at": "2026-10-24T11:00:45Z"
+  },
+  {
+    "id": 40088165129,
+    "workflow": ".github/workflows/triads-steels-compatibility.yml",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40088165129",
+    "created_at": "2026-10-24T11:00:44Z"
+  },
+  {
+    "id": 40087924969,
+    "workflow": "TRIADS checkpoint artifact inspection",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40087924969",
+    "created_at": "2026-10-24T10:57:03Z"
+  },
+  {
+    "id": 40087924072,
+    "workflow": ".github/workflows/triads-steels-compatibility.yml",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40087924072",
+    "created_at": "2026-10-24T10:57:02Z"
+  },
+  {
+    "id": 40083448074,
+    "workflow": "TRIADS steels fast dependency resolve",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40083448074",
+    "created_at": "2026-10-24T09:49:00Z"
+  },
+  {
+    "id": 40083447153,
+    "workflow": ".github/workflows/triads-steels-compatibility.yml",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40083447153",
+    "created_at": "2026-10-24T09:49:00Z"
+  },
+  {
+    "id": 40083172890,
+    "workflow": ".github/workflows/triads-steels-compatibility.yml",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40083172890",
+    "created_at": "2026-10-24T09:44:52Z"
+  },
+  {
+    "id": 40081908763,
+    "workflow": "RudraNet independent reproduction audit",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40081908763",
+    "created_at": "2026-10-24T09:25:44Z"
+  },
+  {
+    "id": 40081827297,
+    "workflow": "RudraNet independent reproduction audit",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40081827297",
+    "created_at": "2026-10-24T09:24:29Z"
+  },
+  {
+    "id": 40080573711,
+    "workflow": "Validate pinned Mat2Vec source integration",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40080573711",
+    "created_at": "2026-10-24T09:05:24Z"
+  },
+  {
+    "id": 40080203798,
+    "workflow": "Audit Mat2Vec upstream SHA256",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/Rtx09x/TRIADS/actions/runs/40080203798",
+    "created_at": "2026-10-24T09:00:03Z"
+  }
+]
