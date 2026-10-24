@@ -1,0 +1,61 @@
+{
+  "checked_utc": "2026-10-24T11:13:11.153085+00:00",
+  "task": "matbench_steels",
+  "file": "Rtx09x/TRIADS:weights/steels/weights.pt",
+  "declared_n_extra": 212,
+  "shape_derived_n_extra": 200,
+  "checkpoint_metadata_n_extra_matches_weights": false,
+  "status": "passed",
+  "torch": "2.3.1+cpu",
+  "sha256": "64ee164db899d44365bea3a67ef258d7e122144d4088357dd56af10a1c0af838",
+  "n_extra": 200,
+  "checkpoint_states": 5,
+  "folds": [
+    {
+      "fold": 1,
+      "parameters": 224685,
+      "seed_label": "avg_42_123_7_0_99",
+      "output_shape": [
+        2
+      ],
+      "strict_load": "passed"
+    },
+    {
+      "fold": 2,
+      "parameters": 224685,
+      "seed_label": "avg_42_123_7_0_99",
+      "output_shape": [
+        2
+      ],
+      "strict_load": "passed"
+    },
+    {
+      "fold": 3,
+      "parameters": 224685,
+      "seed_label": "avg_42_123_7_0_99",
+      "output_shape": [
+        2
+      ],
+      "strict_load": "passed"
+    },
+    {
+      "fold": 4,
+      "parameters": 224685,
+      "seed_label": "avg_42_123_7_0_99",
+      "output_shape": [
+        2
+      ],
+      "strict_load": "passed"
+    },
+    {
+      "fold": 5,
+      "parameters": 224685,
+      "seed_label": "avg_42_123_7_0_99",
+      "output_shape": [
+        2
+      ],
+      "strict_load": "passed"
+    }
+  ],
+  "scope": "Architecture/weights/synthetic forward. Historical raw fold predictions were not regenerated."
+}
