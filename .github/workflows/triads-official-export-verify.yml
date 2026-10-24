@@ -1,0 +1,91 @@
+name: TRIADS official Matbench exporter verification
+on:
+  push:
+    branches: [audit/mat2vec-sha256-20261024]
+    paths: [.github/workflows/triads-official-export-verify.yml]
+permissions:
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install upstream Matbench official API
+        run: |
+          git clone --depth 1 https://github.com/materialsproject/matbench.git /tmp/upstream-matbench
+          python -m pip install --disable-pip-version-check --no-cache-dir -e /tmp/upstream-matbench
+          python -m pip check
+      - name: Round-trip all original PR predictions through official Matbench API
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,gzip,urllib.request,tempfile,pathlib,traceback,datetime,sys
+          report={'checked_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                  'task':'matbench_steels',
+                  'verification':'old prediction data -> official Matbench record -> official to_file -> equality'}
+          dst=pathlib.Path('audits/triads_export_verified.json')
+          try:
+              root='https://raw.githubusercontent.com/Rtx09x/matbench/44ea624b38560caaf45b3582e7201a44e4ee92d9/benchmarks/matbench_v0.1_RudraNet/'
+              with tempfile.TemporaryDirectory() as temp:
+                  work=pathlib.Path(temp)
+                  def get(path):
+                      with urllib.request.urlopen(root+path,timeout=100) as u:
+                          (work/path).write_bytes(u.read())
+                  get('results.json.gz')
+                  get('export_predictions.py')
+                  with gzip.open(work/'results.json.gz','rt') as f:original=json.load(f)
+                  folds=original['tasks']['matbench_steels']['results']
+                  extracted={k:v['data'] for k,v in folds.items()}
+                  (work/'raw_fold_preds.json').write_text(json.dumps(extracted))
+                  import subprocess
+                  p=subprocess.run([sys.executable,str(work/'export_predictions.py'),
+                           '--input',str(work/'raw_fold_preds.json'),
+                           '--output',str(work/'rebuilt.json.gz')],
+                           capture_output=True,text=True,timeout=420)
+                  report['export_returncode']=p.returncode
+                  report['export_stdout_tail']=p.stdout[-1200:]
+                  if p.returncode:
+                      report['export_error_tail']=p.stderr[-3000:]
+                  else:
+                      with gzip.open(work/'rebuilt.json.gz','rt') as f:rebuilt=json.load(f)
+                      new=rebuilt['tasks']['matbench_steels']['results']
+                      assert set(new)==set(folds)
+                      mismatch=[]
+                      for fold in folds:
+                          a=folds[fold]['data'];b=new[fold]['data']
+                          if set(a)!=set(b):mismatch.append({'fold':fold,'reason':'indices'})
+                          else:
+                              for k in a:
+                                  if abs(float(a[k])-float(b[k]))>1e-6:mismatch.append({'fold':fold,'id':k})
+                      report['n_unique_samples']=len(set(k for v in new.values() for k in v['data']))
+                      report['mismatch_count']=len(mismatch)
+                      report['fold_mae']={k:v['scores']['mae'] for k,v in new.items()}
+                      from matbench.bench import MatbenchBenchmark
+                      verify=MatbenchBenchmark.from_file(str(work/'rebuilt.json.gz'))
+                      report['matbench_is_valid']=verify.is_valid
+                      report['matbench_is_recorded']=verify.is_recorded
+                      report['status']='passed' if not mismatch and verify.is_valid and verify.is_recorded else 'failed'
+          except Exception as e:
+              report['status']='error'
+              report['error']=str(e)
+              report['traceback']=traceback.format_exc()[-2000:]
+          dst.write_text(json.dumps(report,indent=2,default=str)+'\n')
+          print(json.dumps(report,indent=2,default=str),flush=True)
+          if report.get('status')!='passed':sys.exit(1)
+          PY
+      - name: Publish verification report
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/triads_export_verified.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Record official Matbench export round-trip [skip ci]"
+            git pull --rebase origin audit/mat2vec-sha256-20261024
+            git push origin HEAD:audit/mat2vec-sha256-20261024
+          fi
